@@ -1,0 +1,62 @@
+From the Instructions
+
+Step 1: Create and Configure the Servers
+
+    Create two Debian 12 servers on Digital Ocean with hostnames "web1" and "web2". Tag them as "web" during the creation process.
+
+    Configure each server using the cloud-config.yaml file you edited earlier. This will set up the user "web" with sudo privileges and SSH access, and disable root SSH access. You can input this configuration in the user data section while creating the droplets.
+
+
+Step 2: Install and Set Up Server Components
+
+Once the servers are up and running, SSH into each server as the "web" user to complete the setup.
+
+Install Nginx and UFW:
+
+	-sudo apt update
+	-sudo apt install nginx ufw -y
+
+Configure UFW firewall to allow HTTP and SSH:
+
+         -sudo ufw allow 'Nginx Full'
+         -sudo ufw allow OpenSSH
+         -sudo ufw enable
+
+Set up the frontend and backend:
+
+    Upload frontend and backend files: Use scp or SFTP to upload your HTML files (for the frontend) and the backend binary to each server.
+    Edit the Nginx configuration: Place the edited hello.conf in /etc/nginx/sites-available/ and create a symbolic link to it in /etc/nginx/sites-enabled/. Then test and reload Nginx:
+
+  
+         -sudo ln -s /etc/nginx/sites-available/hello.conf /etc/nginx/sites-enabled/
+         -sudo nginx -t
+         -sudo systemctl reload nginx
+
+Set up the backend service: Copy the edited hello-server.service to /etc/systemd/system/. Enable and start the service:
+
+
+        -sudo systemctl enable hello-server.service
+        -sudo systemctl start hello-server.service
+
+Step 3: Set Up Load Balancer
+
+    Create a Digital Ocean load balancer: In the Digital Ocean dashboard, navigate to Networking -> Load Balancers and create a new load balancer.
+    Configure the load balancer: Add "web1" and "web2" to the load balancer. Set up forwarding rules to distribute HTTP and SSH traffic to your servers.
+
+Step 4: Test Your Servers
+
+    Use the curl commands from the curl.md file to test your server setup. Replace the IP address in the commands with the IP of your load balancer:
+
+
+    -curl http://your_load_balancer_ip
+    -curl http://your_load_balancer_ip/hey
+    -curl -X POST -H "Content-Type: application/json" -d '{"message": "Hello from your server"}'   
+    -http://your_load_balancer_ip/echo
+
+Additional Notes
+
+    Ensure the paths and settings in the configuration files match your server setup.
+    Test each component after configuration: check if Nginx serves the frontend correctly and if the backend responds as expected.
+    If you encounter any issues, check the logs (Nginx logs in /var/log/nginx/, backend logs in the path specified in your hello-server.service file) for troubleshooting.
+
+By following these steps, you should have a fully functional setup with two web servers behind a load balancer, serving a frontend and a backend application with specific endpoints.
